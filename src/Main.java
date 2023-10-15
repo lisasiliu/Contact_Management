@@ -13,6 +13,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.geometry.Insets;
 import javafx.scene.text.*;
+import javafx.geometry.Rectangle2D;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,8 +21,15 @@ import java.util.Collections;
 class Contact extends HBox {
 
     private Label index;
-    private ImageView profilePic;
+
     private Button picButton;
+    private ImageView profilePic;
+    private Stage imageStage;
+    private FileChooser fileChooser = new FileChooser();
+
+    private Button selectButton;
+    private boolean selected;
+    private VBox buttons;
 
     private HBox contactName;
     private HBox phoneNumber;
@@ -35,18 +43,29 @@ class Contact extends HBox {
     Contact() {
         this.setPrefSize(500, 50); // sets size of task
         this.setStyle("-fx-background-color: #DAE5EA; -fx-border-width: 0; -fx-font-weight: bold;"); // sets background color of task
+        selected = false;
 
         contactName = new HBox();
         phoneNumber = new HBox();
         emailAddress = new HBox();
         contactInfo = new VBox();
+        buttons = new VBox();
 
+        //index number
         index = new Label();
         index.setText(""); // create index label
         index.setPrefSize(40, 20); // set size of Index label
         index.setTextAlignment(TextAlignment.CENTER); // Set alignment of index label
         index.setPadding(new Insets(10, 5, 10, 0)); // adds some padding to the task
         this.getChildren().add(index); // add index label to task
+
+        //add profile image
+        profilePic = new ImageView();
+        profilePic.setFitWidth(110);
+        Rectangle2D viewportRect = new Rectangle2D(200, 200, 1200, 1200);
+        profilePic.setViewport(viewportRect);
+        profilePic.setPreserveRatio(true);
+        this.getChildren().add(profilePic);
 
         //contact name
         contactNameText = new TextField(); // create task name text field
@@ -77,6 +96,19 @@ class Contact extends HBox {
         contactInfo.getChildren().add(phoneNumber);
         this.getChildren().add(contactInfo);
 
+        //upload button
+        picButton = new Button("Upload Image");
+        picButton.setPrefSize(280, 55);
+        picButton.setStyle("-fx-background-color: #DAE5EA; -fx-border-width: 0;"); 
+        buttons.getChildren().add(picButton);
+
+        //selection button
+        selectButton = new Button("Select Contact");
+        selectButton.setPrefSize(280, 55);
+        selectButton.setStyle("-fx-background-color: #DAE5EA; -fx-border-width: 0;"); 
+        buttons.getChildren().add(selectButton);
+
+        this.getChildren().add(buttons);
     }
 
     public void setTaskIndex(int num) {
@@ -94,21 +126,33 @@ class Contact extends HBox {
         return this.picButton;
     }
 
-    // public void toggleDone() {
-    //     if (!markedDone) {
-    //         markedDone = true;
-    //         this.setStyle("-fx-border-color: #000000; -fx-border-width: 0; -fx-font-weight: bold;"); // remove border of task
-    //         for (int i = 0; i < this.getChildren().size(); i++) {
-    //             this.getChildren().get(i).setStyle("-fx-background-color: #BCE29E; -fx-border-width: 0;"); // change color of task to green
-    //         }
-    //     }
-    //     else {
-    //         markedDone = false;
-    //         for (int i = 0; i < this.getChildren().size(); i++) {
-    //             this.getChildren().get(i).setStyle("-fx-background-color: #DAE5EA; -fx-border-width: 0;"); // change color of task to green
-    //         }
-    //     }
-    // }
+    public Button getSelectButton() {
+        return this.selectButton;
+    }
+
+    public void uploadPic() {
+        imageStage = new Stage();
+        //picButton.setStyle("-fx-background-color: #BCE29E; -fx-border-width: 0;");
+
+        fileChooser.getExtensionFilters().add(new ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg"));
+        File selectedFile = fileChooser.showOpenDialog(imageStage);
+        if (selectedFile != null) {
+            Image image = new Image(selectedFile.toURI().toString());
+            profilePic.setImage(image);
+        }
+    }
+
+    public void toggleSelect() {
+        if (!selected) {
+            selected = true;
+            selectButton.setStyle("-fx-border-color: #000000; -fx-border-width: 0; -fx-font-weight: bold;"); 
+            selectButton.setStyle("-fx-background-color: #BCE29E; -fx-border-width: 0;");
+        }
+        else {
+            selected = false;
+            selectButton.setStyle("-fx-background-color: #DAE5EA; -fx-border-width: 0;"); 
+        }
+    }
 }
 
 class ContactList extends VBox {
@@ -239,10 +283,14 @@ class AppFrame extends BorderPane{
         addButton.setOnAction(e -> {
             Contact contact = new Contact();
             contactList.getChildren().add(contact);
-            // Button picButton = contact.getPicButton();
-            // picButton.setOnAction(e1 -> {
-            //     contact.toggleDone();
-            // });
+            Button picButton = contact.getPicButton();
+            picButton.setOnAction(e1 -> {
+                contact.uploadPic();
+            });
+            Button selectButton = contact.getSelectButton();
+            selectButton.setOnAction(e2 -> {
+                contact.toggleSelect();
+            });
             contactList.updateTaskIndices();
         });
         // clearButton.setOnAction(e -> {
