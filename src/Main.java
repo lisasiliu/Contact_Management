@@ -15,8 +15,10 @@ import javafx.geometry.Insets;
 import javafx.scene.text.*;
 import javafx.geometry.Rectangle2D;
 import java.io.*;
+import javafx.util.Pair;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 
 class Contact extends HBox {
 
@@ -172,6 +174,35 @@ class ContactList extends VBox {
             }
         }
     }
+
+    public void sortNames() {
+        ArrayList<Contact> nameList = new ArrayList<Contact>();
+        for (int i = 0; i < this.getChildren().size(); i++) {
+            if (this.getChildren().get(i) instanceof Contact) {
+                nameList.add((Contact) this.getChildren().get(i));
+                //nameList.add(((Contact) this.getChildren().get(i)).getContactName().getText());
+            }
+        }
+        Collections.sort(nameList, new Comparator<Contact>() {
+            public int compare(Contact a, Contact b) {
+                return a.getContactName().getText().compareTo(b.getContactName().getText());
+            }
+        });
+        this.getChildren().clear();
+        for (int i = 0; i < nameList.size(); i++) {
+            Contact contact = (Contact)nameList.get(i);
+            this.getChildren().add(contact);
+            Button picButton = contact.getPicButton();
+            picButton.setOnAction(e1 -> {
+                contact.uploadPic();
+            });
+            Button selectButton = contact.getSelectButton();
+            selectButton.setOnAction(e2 -> {
+                contact.toggleSelect();
+            });
+        }
+        this.updateTaskIndices();
+    }
 }
 
 
@@ -210,11 +241,9 @@ class Footer extends HBox {
     public Button getAddButton() {
         return addButton;
     }
-
     public Button getClearButton() {
         return clearButton;
     }
-
     public Button getLoadButton() {
         return loadButton;
     }
@@ -305,9 +334,9 @@ class AppFrame extends BorderPane{
         //     contactList.saveTasks();
         // });
 
-        // sortButton.setOnAction(e -> {
-        //     contactList.sortTasks();
-        // });
+        sortButton.setOnAction(e -> {
+            contactList.sortNames();
+        });
     }
 }
 
