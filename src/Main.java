@@ -132,9 +132,12 @@ class Contact extends HBox {
         return this.selectButton;
     }
 
+    public boolean isSelected() {
+        return this.selected;
+    }
+
     public void uploadPic() {
         imageStage = new Stage();
-        //picButton.setStyle("-fx-background-color: #BCE29E; -fx-border-width: 0;");
 
         fileChooser.getExtensionFilters().add(new ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg"));
         File selectedFile = fileChooser.showOpenDialog(imageStage);
@@ -175,21 +178,25 @@ class ContactList extends VBox {
         }
     }
 
+    public void removeSelectedContacts() {
+        this.getChildren().removeIf(contact -> contact instanceof Contact && ((Contact) contact).isSelected());
+        this.updateTaskIndices();
+    }
+
     public void sortNames() {
         ArrayList<Contact> nameList = new ArrayList<Contact>();
         for (int i = 0; i < this.getChildren().size(); i++) {
             if (this.getChildren().get(i) instanceof Contact) {
                 nameList.add((Contact) this.getChildren().get(i));
-                //nameList.add(((Contact) this.getChildren().get(i)).getContactName().getText());
             }
         }
-        Collections.sort(nameList, new Comparator<Contact>() {
+        Collections.sort(nameList, new Comparator<Contact>() { //sorted list of contacts
             public int compare(Contact a, Contact b) {
                 return a.getContactName().getText().compareTo(b.getContactName().getText());
             }
         });
-        this.getChildren().clear();
-        for (int i = 0; i < nameList.size(); i++) {
+        this.getChildren().clear(); //empty list
+        for (int i = 0; i < nameList.size(); i++) { //add all contacts back into official list
             Contact contact = (Contact)nameList.get(i);
             this.getChildren().add(contact);
             Button picButton = contact.getPicButton();
@@ -223,7 +230,7 @@ class Footer extends HBox {
 
         addButton = new Button("Add Contact"); 
         addButton.setStyle(defaultButtonStyle); 
-        clearButton = new Button("Clear finished"); 
+        clearButton = new Button("Clear Selected"); 
         clearButton.setStyle(defaultButtonStyle);
 
         loadButton = new Button("Load");
@@ -322,9 +329,9 @@ class AppFrame extends BorderPane{
             });
             contactList.updateTaskIndices();
         });
-        // clearButton.setOnAction(e -> {
-        //     contactList.removeCompletedTasks();
-        // });
+        clearButton.setOnAction(e -> {
+            contactList.removeSelectedContacts();
+        });
 
         // loadButton.setOnAction(e -> {
         //     contactList.loadTasks();
