@@ -3,6 +3,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.*;
 import javafx.scene.control.Label;
@@ -20,6 +21,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 class Contact extends HBox {
 
@@ -43,6 +47,10 @@ class Contact extends HBox {
     private TextField phoneNumberText;
     private TextField emailAddressText;
 
+    private ChoiceBox<String> categoryMenu;
+    private String category;
+
+
     Contact() {
         this.setPrefSize(500, 50); // sets size of task
         this.setStyle("-fx-background-color: #DAE5EA; -fx-border-width: 0; -fx-font-weight: bold;"); // sets background color of task
@@ -53,6 +61,7 @@ class Contact extends HBox {
         emailAddress = new HBox();
         contactInfo = new VBox();
         buttons = new VBox();
+
 
         //index number
         index = new Label();
@@ -111,11 +120,30 @@ class Contact extends HBox {
         selectButton.setStyle("-fx-background-color: #DAE5EA; -fx-border-width: 0;"); 
         buttons.getChildren().add(selectButton);
 
+        //contact categorization
+        categoryMenu = new ChoiceBox<>();
+        categoryMenu.getItems().add("Default");
+        categoryMenu.getItems().add("Friend");
+        categoryMenu.getItems().add("Family");
+        categoryMenu.getItems().add("School");
+        categoryMenu.getItems().add("Work");
+        categoryMenu.setValue("Default");
+        categoryMenu.setPrefSize(200, 20);
+        categoryMenu.setStyle("-fx-background-color: #DAE5EA; -fx-border-width: 0; -fx-padding-left: 50;");
+        buttons.getChildren().add(categoryMenu);
+
         this.getChildren().add(buttons);
+        buttons.setAlignment(Pos.CENTER);
+
+        categoryMenu.setOnAction(e -> {
+            String selectedCategory = categoryMenu.getValue();
+            categoryMenu.setValue(selectedCategory);
+        });
+       
     }
 
     public void setTaskIndex(int num) {
-        this.index.setText(num + ""); // num to String
+        this.index.setText(String.valueOf(num)); // num to String
         this.contactNameText.setPromptText("Name");
         this.emailAddressText.setPromptText("Email address");
         this.phoneNumberText.setPromptText("Phone number");
@@ -167,6 +195,14 @@ class Contact extends HBox {
             selectButton.setStyle("-fx-background-color: #DAE5EA; -fx-border-width: 0;"); 
         }
     }
+
+    public String getCategory() {
+        return categoryMenu.getValue();
+    }
+
+    public void setCategory(String category) {
+        categoryMenu.setValue(category);
+    }
 }
 
 class ContactList extends VBox {
@@ -178,11 +214,11 @@ class ContactList extends VBox {
     }
 
     public void updateTaskIndices() {
-        int index = 1;
+        //int index = 1;
         for (int i = 0; i < this.getChildren().size(); i++) {
             if (this.getChildren().get(i) instanceof Contact) {
-                ((Contact) this.getChildren().get(i)).setTaskIndex(index);
-                index++;
+                ((Contact) this.getChildren().get(i)).setTaskIndex(i+1);
+                //index++;
             }
         }
     }
@@ -216,6 +252,7 @@ class ContactList extends VBox {
             selectButton.setOnAction(e2 -> {
                 contact.toggleSelect();
             });
+            //contact.setCategory(contact.getCategory());
         }
         this.updateTaskIndices();
     }
@@ -239,7 +276,7 @@ class ContactList extends VBox {
                 System.out.println(str);
 
                 int count = 0;
-                String name = "", email = "", phone = "";
+                String name = "", email = "", phone = "", category = "";
                 for (int i = 0; i < str.length(); i++) {
                     if (str.substring(i, i+1).equals(",")) {
                         count++;
@@ -253,14 +290,18 @@ class ContactList extends VBox {
                     else if (count == 2) {
                         phone += str.substring(i, i+1);
                     }
+                    else if (count == 3) {
+                        category += str.substring(i, i+1);
+                    }
                     else {
                         System.out.println("too many commas!");
                     }
                 }
-                System.out.println(name + " " + email + " " + phone + " " + count + "\n");
+                System.out.println(name + " " + email + " " + phone + " " + category + "" + count + "\n");
                 cur.getContactName().setText(name);
                 cur.getEmailAddress().setText(email);
                 cur.getPhoneNumber().setText(phone);
+                cur.setCategory(category);
 
                 Button picButton = cur.getPicButton();
                 picButton.setOnAction(e1 -> {
@@ -289,7 +330,8 @@ class ContactList extends VBox {
                     String name = cur.getContactName().getText();
                     String email = cur.getEmailAddress().getText();
                     String phoneNum = cur.getPhoneNumber().getText();
-                    fw.write(name + ',' + email + ',' + phoneNum + '\n');
+                    String category = cur.getCategory();
+                    fw.write(name + ',' + email + ',' + phoneNum + ',' + category + '\n'); 
                 }
             }
             fw.close();
@@ -298,6 +340,49 @@ class ContactList extends VBox {
             System.out.println("unable to save to 'contacts.csv' file!");
         }
     }
+
+    public void sortCategory() {
+    Map<String, List<Contact>> contactsByCategory = new HashMap<>();
+
+    for (int i = 0; i < this.getChildren().size(); i++) {
+        if (this.getChildren().get(i) instanceof Contact) {
+            Contact contact = (Contact) this.getChildren().get(i);
+            String category = contact.getCategory();
+            contactsByCategory.computeIfAbsent(category, k -> new ArrayList<>()).add(contact);
+        }
+    }
+
+    // Sort contacts within each category by name
+    for (List<Contact> contacts : contactsByCategory.values()) {
+        Collections.sort(contacts, new Comparator<Contact>() {
+            @Override
+            public int compare(Contact contact1, Contact contact2) {
+                String name1 = contact1.getContactName().getText();
+                String name2 = contact2.getContactName().getText();
+                return name1.compareTo(name2);
+            }
+        });
+    }
+
+    // Clear the list and add the sorted contacts back in
+    this.getChildren().clear();
+    for (List<Contact> contacts : contactsByCategory.values()) {
+        for (int i = 0; i < contacts.size(); i++) {
+            Contact contact = (Contact)contacts.get(i);
+            this.getChildren().add(contact);
+            Button picButton = contact.getPicButton();
+            picButton.setOnAction(e1 -> {
+                contact.uploadPic();
+            });
+            Button selectButton = contact.getSelectButton();
+            selectButton.setOnAction(e2 -> {
+                contact.toggleSelect();
+            });
+        }
+    }
+
+    this.updateTaskIndices();
+}
 }
 
 
@@ -308,6 +393,7 @@ class Footer extends HBox {
     private Button loadButton;
     private Button saveButton;
     private Button sortButton;
+    private Button sortCategoryButton;
 
     Footer() {
         this.setPrefSize(500, 60);
@@ -328,7 +414,10 @@ class Footer extends HBox {
         sortButton = new Button("Sort");
         sortButton.setStyle(defaultButtonStyle);
 
-        this.getChildren().addAll(addButton, clearButton, loadButton, saveButton, sortButton);
+        sortCategoryButton = new Button("Sort By Category");
+        sortCategoryButton.setStyle(defaultButtonStyle);
+
+        this.getChildren().addAll(addButton, clearButton, loadButton, saveButton, sortButton, sortCategoryButton);
         this.setAlignment(Pos.CENTER); 
 
     }
@@ -347,6 +436,9 @@ class Footer extends HBox {
     }
     public Button getSortButton() {
         return sortButton;
+    }
+    public Button getSortCategoryButton() {
+        return sortCategoryButton;
     }
 }
 
@@ -378,6 +470,8 @@ class AppFrame extends BorderPane{
     private Button saveButton;
     private Button sortButton;
 
+    private Button sortCategoryButton;
+
     AppFrame()
     {
         header = new Header();
@@ -397,6 +491,7 @@ class AppFrame extends BorderPane{
         loadButton = footer.getLoadButton();
         saveButton = footer.getSaveButton();
         sortButton = footer.getSortButton();
+        sortCategoryButton = footer.getSortCategoryButton();
 
         addListeners();
     }
@@ -430,6 +525,9 @@ class AppFrame extends BorderPane{
 
         sortButton.setOnAction(e -> {
             contactList.sortNames();
+        });
+        sortCategoryButton.setOnAction(e -> {
+            contactList.sortCategory();
         });
     }
 }
