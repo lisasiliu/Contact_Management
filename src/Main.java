@@ -17,6 +17,7 @@ import javafx.geometry.Rectangle2D;
 import java.io.*;
 import javafx.util.Pair;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 
@@ -124,6 +125,14 @@ class Contact extends HBox {
         return this.contactNameText;
     }
 
+    public TextField getEmailAddress() {
+        return this.emailAddressText;
+    }
+
+    public TextField getPhoneNumber() {
+        return this.phoneNumberText;
+    }
+
     public Button getPicButton() {
         return this.picButton;
     }
@@ -210,6 +219,85 @@ class ContactList extends VBox {
         }
         this.updateTaskIndices();
     }
+
+    // public String convertToCSV(String[] data) {
+    //     return Stream.of(data)
+    //     .map(this::escapeSpecialCharacters)
+    //     .collect(Collectors.joining(","));
+    // }
+
+    public void loadContacts() {
+        //wip
+        try {
+            FileReader fr = new FileReader("src/contacts.csv");
+            BufferedReader br = new BufferedReader(fr);
+            while (br.ready()) {
+                String str = br.readLine();
+                Contact cur = new Contact();
+                this.getChildren().add(cur);
+
+                System.out.println(str);
+
+                int count = 0;
+                String name = "", email = "", phone = "";
+                for (int i = 0; i < str.length(); i++) {
+                    if (str.substring(i, i+1).equals(",")) {
+                        count++;
+                    }
+                    else if (count == 0) {
+                        name += str.substring(i, i+1);
+                    }
+                    else if (count == 1) {
+                        email += str.substring(i, i+1);
+                    }
+                    else if (count == 2) {
+                        phone += str.substring(i, i+1);
+                    }
+                    else {
+                        System.out.println("too many commas!");
+                    }
+                }
+                System.out.println(name + " " + email + " " + phone + " " + count + "\n");
+                cur.getContactName().setText(name);
+                cur.getEmailAddress().setText(email);
+                cur.getPhoneNumber().setText(phone);
+
+                Button picButton = cur.getPicButton();
+                picButton.setOnAction(e1 -> {
+                    cur.uploadPic();
+                });
+                Button selectButton = cur.getSelectButton();
+                selectButton.setOnAction(e2 -> {
+                    cur.toggleSelect();
+                });
+                
+                this.updateTaskIndices();
+            }
+            fr.close();
+            br.close();
+        }
+        catch (Exception e) {
+            System.out.println("no 'contacts.csv' file found!");
+        }
+    }
+    public void saveContacts() {
+        try {
+            FileWriter fw = new FileWriter("src/contacts.csv", false);
+            for (int i = 0; i < this.getChildren().size(); i++) {
+                if (this.getChildren().get(i) instanceof Contact) {
+                    Contact cur = (Contact) this.getChildren().get(i);
+                    String name = cur.getContactName().getText();
+                    String email = cur.getEmailAddress().getText();
+                    String phoneNum = cur.getPhoneNumber().getText();
+                    fw.write(name + ',' + email + ',' + phoneNum + '\n');
+                }
+            }
+            fw.close();
+        }
+        catch (Exception e) {
+            System.out.println("unable to save to 'contacts.csv' file!");
+        }
+    }
 }
 
 
@@ -290,7 +378,6 @@ class AppFrame extends BorderPane{
     private Button saveButton;
     private Button sortButton;
 
-    //crud fix
     AppFrame()
     {
         header = new Header();
@@ -333,13 +420,13 @@ class AppFrame extends BorderPane{
             contactList.removeSelectedContacts();
         });
 
-        // loadButton.setOnAction(e -> {
-        //     contactList.loadTasks();
-        // });
+        loadButton.setOnAction(e -> {
+            contactList.loadContacts();
+        });
 
-        // saveButton.setOnAction(e -> {
-        //     contactList.saveTasks();
-        // });
+        saveButton.setOnAction(e -> {
+            contactList.saveContacts();
+        });
 
         sortButton.setOnAction(e -> {
             contactList.sortNames();
