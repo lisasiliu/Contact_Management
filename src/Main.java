@@ -48,12 +48,12 @@ class Contact extends HBox {
     private TextField emailAddressText;
 
     private ChoiceBox<String> categoryMenu;
-    private String category;
 
 
     Contact() {
         this.setPrefSize(500, 50); // sets size of task
         this.setStyle("-fx-background-color: #DAE5EA; -fx-border-width: 0; -fx-font-weight: bold;"); // sets background color of task
+        this.setSpacing(20);
         selected = false;
 
         contactName = new HBox();
@@ -66,9 +66,9 @@ class Contact extends HBox {
         //index number
         index = new Label();
         index.setText(""); // create index label
-        index.setPrefSize(40, 20); // set size of Index label
-        index.setTextAlignment(TextAlignment.CENTER); // Set alignment of index label
-        index.setPadding(new Insets(10, 5, 10, 0)); // adds some padding to the task
+        index.setPrefSize(80, 40); // set size of Index label
+        index.setTextAlignment(TextAlignment.LEFT); // Set alignment of index label
+        index.setPadding(new Insets(5, 0, 5, 0)); // adds some padding to the task
         this.getChildren().add(index); // add index label to task
 
         //add profile image
@@ -128,8 +128,8 @@ class Contact extends HBox {
         categoryMenu.getItems().add("School");
         categoryMenu.getItems().add("Work");
         categoryMenu.setValue("Default");
-        categoryMenu.setPrefSize(200, 20);
-        categoryMenu.setStyle("-fx-background-color: #DAE5EA; -fx-border-width: 0; -fx-padding-left: 50;");
+        categoryMenu.setPrefSize(280, 55);
+        categoryMenu.setStyle("-fx-background-color: #DAE5EA; -fx-border-width: 0;");
         buttons.getChildren().add(categoryMenu);
 
         this.getChildren().add(buttons);
@@ -214,11 +214,11 @@ class ContactList extends VBox {
     }
 
     public void updateTaskIndices() {
-        //int index = 1;
+        int index = 1;
         for (int i = 0; i < this.getChildren().size(); i++) {
             if (this.getChildren().get(i) instanceof Contact) {
-                ((Contact) this.getChildren().get(i)).setTaskIndex(i+1);
-                //index++;
+                ((Contact) this.getChildren().get(i)).setTaskIndex(index);
+                index++;
             }
         }
     }
@@ -297,7 +297,7 @@ class ContactList extends VBox {
                         System.out.println("too many commas!");
                     }
                 }
-                System.out.println(name + " " + email + " " + phone + " " + category + "" + count + "\n");
+                //System.out.println(name + " " + email + " " + phone + " " + category + "" + count + "\n");
                 cur.getContactName().setText(name);
                 cur.getEmailAddress().setText(email);
                 cur.getPhoneNumber().setText(phone);
